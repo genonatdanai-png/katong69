@@ -1,1059 +1,2334 @@
-<!-- ... existing code ... -->
-<!-- สถิติและปุ่มควบคุมด้านบน -->
-<div class="flex items-center gap-2 sm:gap-3">
-<div class="hidden md:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-night-900/80 border border-yellow-500/20 text-xs sm:text-sm">
-<i class="fa-solid fa-water text-sky-400"></i>
-<span class="text-slate-300">กระทงในแม่น้ำ:</span>
-<span id="krathongCount" class="font-bold text-yellow-400 text-base">0</span>
-<span class="text-slate-400">ใบ</span>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ลอยกระทงออนไลน์ รักษ์โลก ลดโลกร้อน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sriracha&display=swap" rel="stylesheet">
+<style>
+
+    :root {
+
+      --bg-sky-top: #070d1f;
+
+      --bg-sky-mid: #102145;
+
+      --bg-sky-low: #1b3668;
+
+      --water-top: #0c2240;
+
+      --water-bottom: #050f1f;
+
+      --gold: #ffd166;
+
+      --gold-deep: #f4a261;
+
+      --emerald: #2ec4b6;
+
+      --leaf-green: #2d6a4f;
+
+      --glass-bg: rgba(12, 24, 48, 0.72);
+
+      --glass-border: rgba(255, 209, 102, 0.28);
+
+      --text-main: #f8fafc;
+
+      --text-muted: #cbd5e1;
+
+    }
+
+    * {
+
+      box-sizing: border-box;
+
+      margin: 0;
+
+      padding: 0;
+
+      font-family: 'Prompt', sans-serif;
+
+    }
+
+    body {
+
+      background: var(--bg-sky-top);
+
+      color: var(--text-main);
+
+      min-height: 100vh;
+
+      overflow: hidden;
+
+      position: relative;
+
+      user-select: none;
+
+    }
+
+    /* Sky & Background Scenery */
+
+    .scene {
+
+      position: fixed;
+
+      inset: 0;
+
+      background: linear-gradient(180deg, var(--bg-sky-top) 0%, var(--bg-sky-mid) 36%, var(--bg-sky-low) 54%, var(--water-top) 54.5%, var(--water-bottom) 100%);
+
+      overflow: hidden;
+
+      z-index: 1;
+
+    }
+
+    #fireworksCanvas {
+
+      position: absolute;
+
+      top: 0;
+
+      left: 0;
+
+      width: 100%;
+
+      height: 56%;
+
+      pointer-events: none;
+
+      z-index: 2;
+
+    }
+
+    /* Stars */
+
+    .stars {
+
+      position: absolute;
+
+      top: 0;
+
+      left: 0;
+
+      width: 100%;
+
+      height: 52%;
+
+      pointer-events: none;
+
+      z-index: 1;
+
+    }
+
+    .star {
+
+      position: absolute;
+
+      background: #fff;
+
+      border-radius: 50%;
+
+      animation: twinkle var(--dur, 3s) infinite ease-in-out alternate;
+
+    }
+
+    @keyframes twinkle {
+
+      0% { opacity: 0.2; transform: scale(0.8); }
+
+      100% { opacity: 1; transform: scale(1.2); }
+
+    }
+
+    /* Full Moon */
+
+    .moon {
+
+      position: absolute;
+
+      top: 9%;
+
+      right: 14%;
+
+      width: 92px;
+
+      height: 92px;
+
+      border-radius: 50%;
+
+      background: radial-gradient(circle at 35% 35%, #fffbe6 0%, #ffe699 55%, #ffd166 100%);
+
+      box-shadow: 0 0 40px rgba(255, 225, 130, 0.65), 0 0 90px rgba(255, 209, 102, 0.3);
+
+      z-index: 2;
+
+    }
+
+    /* Temple Silhouette */
+
+    .skyline {
+
+      position: absolute;
+
+      top: calc(54.5% - 125px);
+
+      left: 0;
+
+      width: 100%;
+
+      height: 130px;
+
+      pointer-events: none;
+
+      z-index: 3;
+
+      opacity: 0.9;
+
+    }
+
+    /* Water Ripples & Moon Reflection */
+
+    .moon-reflection {
+
+      position: absolute;
+
+      top: 55%;
+
+      right: 12%;
+
+      width: 130px;
+
+      height: 45%;
+
+      background: radial-gradient(ellipse at top, rgba(255, 224, 130, 0.25) 0%, rgba(255, 209, 102, 0.05) 55%, transparent 80%);
+
+      filter: blur(8px);
+
+      pointer-events: none;
+
+      z-index: 2;
+
+    }
+
+    .water-shimmer {
+
+      position: absolute;
+
+      top: 54.5%;
+
+      left: 0;
+
+      width: 100%;
+
+      height: 45.5%;
+
+      background-image: repeating-linear-gradient(
+
+        180deg,
+
+        rgba(255, 255, 255, 0.03) 0px,
+
+        rgba(255, 255, 255, 0.03) 2px,
+
+        transparent 2px,
+
+        transparent 18px
+
+      );
+
+      animation: waterDrift 6s linear infinite;
+
+      pointer-events: none;
+
+      z-index: 2;
+
+    }
+
+    @keyframes waterDrift {
+
+      0% { background-position: 0 0; }
+
+      100% { background-position: 0 36px; }
+
+    }
+
+    /* River Container for Floating Krathongs */
+
+    .river-area {
+
+      position: absolute;
+
+      top: 54.5%;
+
+      left: 0;
+
+      width: 100%;
+
+      height: 45.5%;
+
+      z-index: 5;
+
+      overflow: hidden;
+
+    }
+
+    /* Krathong Item on River */
+
+    .krathong-item {
+
+      position: absolute;
+
+      cursor: pointer;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      transition: filter 0.2s ease, transform 0.2s ease;
+
+      will-change: left, transform;
+
+    }
+
+    .krathong-item:hover {
+
+      filter: drop-shadow(0 0 14px rgba(255, 209, 102, 0.9));
+
+      z-index: 50 !important;
+
+    }
+
+    .krathong-bob {
+
+      animation: bobbing var(--bob-dur, 3.4s) ease-in-out infinite alternate;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+    }
+
+    @keyframes bobbing {
+
+      0% { transform: translateY(0px) rotate(-1.8deg); }
+
+      100% { transform: translateY(-7px) rotate(1.8deg); }
+
+    }
+
+    .krathong-label {
+
+      background: rgba(8, 18, 38, 0.78);
+
+      border: 1px solid rgba(255, 209, 102, 0.45);
+
+      color: #fff;
+
+      font-size: 12px;
+
+      padding: 3px 10px;
+
+      border-radius: 999px;
+
+      white-space: nowrap;
+
+      max-width: 180px;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+
+      margin-bottom: 4px;
+
+      backdrop-filter: blur(4px);
+
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+
+    }
+
+    .krathong-item.is-mine .krathong-label {
+
+      background: linear-gradient(135deg, rgba(244, 162, 97, 0.92), rgba(231, 111, 81, 0.92));
+
+      border-color: #fff3b0;
+
+      font-weight: 600;
+
+      color: #fff;
+
+    }
+
+    .ripple-ring {
+
+      width: 90px;
+
+      height: 20px;
+
+      border-radius: 50%;
+
+      border: 1.5px solid rgba(144, 224, 239, 0.45);
+
+      margin-top: -10px;
+
+      animation: rippleExpand 3s infinite ease-out;
+
+      pointer-events: none;
+
+    }
+
+    @keyframes rippleExpand {
+
+      0% { transform: scale(0.75); opacity: 0.75; }
+
+      100% { transform: scale(1.45); opacity: 0; }
+
+    }
+
+    /* Top Header & Eco Impact Counter */
+
+    .top-bar {
+
+      position: fixed;
+
+      top: 0;
+
+      left: 0;
+
+      width: 100%;
+
+      z-index: 20;
+
+      padding: 14px 20px;
+
+      display: flex;
+
+      flex-wrap: wrap;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      gap: 12px;
+
+      background: linear-gradient(180deg, rgba(5, 11, 26, 0.88) 0%, rgba(5, 11, 26, 0) 100%);
+
+    }
+
+    .brand {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+    }
+
+    .brand-badge {
+
+      background: linear-gradient(135deg, #2d6a4f, #40916c);
+
+      border: 1px solid #95d5b2;
+
+      color: #e9f5db;
+
+      font-size: 12px;
+
+      font-weight: 600;
+
+      padding: 4px 10px;
+
+      border-radius: 999px;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 5px;
+
+    }
+
+    .brand h1 {
+
+      font-size: 20px;
+
+      font-weight: 700;
+
+      background: linear-gradient(90deg, #fff3b0, #ffd166);
+
+      -webkit-background-clip: text;
+
+      -webkit-text-fill-color: transparent;
+
+      letter-spacing: 0.3px;
+
+    }
+
+    /* Eco Counter Pill */
+
+    .eco-dashboard {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 14px;
+
+      background: var(--glass-bg);
+
+      border: 1px solid rgba(82, 183, 136, 0.45);
+
+      padding: 8px 16px;
+
+      border-radius: 16px;
+
+      backdrop-filter: blur(10px);
+
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+      transition: box-shadow 0.4s ease, border-color 0.4s ease;
+
+    }
+
+    .eco-dashboard.pulse {
+
+      border-color: #ffd166;
+
+      box-shadow: 0 0 24px rgba(82, 183, 136, 0.75);
+
+    }
+
+    .eco-stat {
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      padding: 0 6px;
+
+    }
+
+    .eco-stat:not(:last-child) {
+
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+
+      padding-right: 14px;
+
+    }
+
+    .eco-val {
+
+      font-size: 16px;
+
+      font-weight: 700;
+
+      color: #80ed99;
+
+      line-height: 1.2;
+
+    }
+
+    .eco-lbl {
+
+      font-size: 11px;
+
+      color: var(--text-muted);
+
+    }
+
+    /* Floating Action Controls at Bottom */
+
+    .bottom-controls {
+
+      position: fixed;
+
+      bottom: 22px;
+
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      z-index: 25;
+
+      display: flex;
+
+      gap: 12px;
+
+      align-items: center;
+
+    }
+
+    .btn-primary {
+
+      background: linear-gradient(135deg, #ffd166 0%, #f4a261 100%);
+
+      color: #1b1507;
+
+      border: none;
+
+      padding: 13px 26px;
+
+      border-radius: 999px;
+
+      font-size: 16px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 8px;
+
+      box-shadow: 0 8px 25px rgba(244, 162, 97, 0.45);
+
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    }
+
+    .btn-primary:hover {
+
+      transform: translateY(-2px) scale(1.02);
+
+      box-shadow: 0 12px 30px rgba(244, 162, 97, 0.65);
+
+    }
+
+    .btn-secondary {
+
+      background: var(--glass-bg);
+
+      color: var(--text-main);
+
+      border: 1px solid var(--glass-border);
+
+      padding: 12px 18px;
+
+      border-radius: 999px;
+
+      font-size: 14px;
+
+      font-weight: 500;
+
+      cursor: pointer;
+
+      backdrop-filter: blur(8px);
+
+      transition: background 0.2s ease, transform 0.2s ease;
+
+    }
+
+    .btn-secondary:hover {
+
+      background: rgba(25, 45, 85, 0.85);
+
+      transform: translateY(-1px);
+
+    }
+
+    /* Modal Backdrop & Dialog */
+
+    .modal-backdrop {
+
+      position: fixed;
+
+      inset: 0;
+
+      background: rgba(4, 9, 20, 0.76);
+
+      backdrop-filter: blur(6px);
+
+      z-index: 100;
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      padding: 16px;
+
+      overflow-y: auto;
+
+    }
+
+    .modal-backdrop.active {
+
+      display: flex;
+
+      animation: fadeIn 0.25s ease;
+
+    }
+
+    @keyframes fadeIn {
+
+      from { opacity: 0; }
+
+      to { opacity: 1; }
+
+    }
+
+    .modal-card {
+
+      background: linear-gradient(160deg, #112244 0%, #0b162e 100%);
+
+      border: 1px solid var(--glass-border);
+
+      border-radius: 24px;
+
+      width: 100%;
+
+      max-width: 480px;
+
+      padding: 24px;
+
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+
+      position: relative;
+
+      max-height: 92vh;
+
+      overflow-y: auto;
+
+    }
+
+    .modal-close {
+
+      position: absolute;
+
+      top: 16px;
+
+      right: 16px;
+
+      width: 34px;
+
+      height: 34px;
+
+      border-radius: 50%;
+
+      border: 1px solid rgba(255,255,255,0.2);
+
+      background: rgba(255,255,255,0.08);
+
+      color: #fff;
+
+      font-size: 18px;
+
+      cursor: pointer;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+    }
+
+    .modal-close:hover {
+
+      background: rgba(255,255,255,0.2);
+
+    }
+
+    .modal-title {
+
+      font-size: 20px;
+
+      font-weight: 700;
+
+      color: var(--gold);
+
+      margin-bottom: 4px;
+
+      text-align: center;
+
+    }
+
+    .modal-subtitle {
+
+      font-size: 13px;
+
+      color: var(--text-muted);
+
+      text-align: center;
+
+      margin-bottom: 18px;
+
+    }
+
+    /* Krathong Selector Grid */
+
+    .krathong-options {
+
+      display: grid;
+
+      grid-template-columns: repeat(3, 1fr);
+
+      gap: 10px;
+
+      margin-bottom: 18px;
+
+    }
+
+    .k-option {
+
+      background: rgba(255, 255, 255, 0.04);
+
+      border: 2px solid rgba(255, 255, 255, 0.12);
+
+      border-radius: 16px;
+
+      padding: 10px 6px;
+
+      text-align: center;
+
+      cursor: pointer;
+
+      transition: all 0.2s ease;
+
+    }
+
+    .k-option:hover {
+
+      background: rgba(255, 255, 255, 0.09);
+
+    }
+
+    .k-option.selected {
+
+      border-color: var(--gold);
+
+      background: rgba(255, 209, 102, 0.14);
+
+      box-shadow: 0 0 16px rgba(255, 209, 102, 0.25);
+
+    }
+
+    .k-option-name {
+
+      font-size: 12px;
+
+      font-weight: 500;
+
+      margin-top: 6px;
+
+      color: #f1f5f9;
+
+      line-height: 1.3;
+
+    }
+
+    /* Form Controls */
+
+    .form-group {
+
+      margin-bottom: 14px;
+
+    }
+
+    .form-label-row {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      margin-bottom: 6px;
+
+    }
+
+    .form-group label {
+
+      font-size: 13px;
+
+      font-weight: 500;
+
+      color: #e2e8f0;
+
+    }
+
+    .btn-random-wish {
+
+      background: rgba(82, 183, 136, 0.2);
+
+      border: 1px solid rgba(82, 183, 136, 0.5);
+
+      color: #95d5b2;
+
+      font-size: 12px;
+
+      padding: 4px 10px;
+
+      border-radius: 999px;
+
+      cursor: pointer;
+
+      transition: all 0.2s;
+
+    }
+
+    .btn-random-wish:hover {
+
+      background: rgba(82, 183, 136, 0.35);
+
+      color: #fff;
+
+    }
+
+    .form-input, .form-textarea {
+
+      width: 100%;
+
+      background: rgba(6, 13, 28, 0.75);
+
+      border: 1px solid rgba(255, 255, 255, 0.2);
+
+      border-radius: 12px;
+
+      padding: 11px 14px;
+
+      color: #fff;
+
+      font-size: 14px;
+
+      outline: none;
+
+      transition: border-color 0.2s;
+
+    }
+
+    .form-input:focus, .form-textarea:focus {
+
+      border-color: var(--gold);
+
+    }
+
+    .form-textarea {
+
+      resize: none;
+
+      height: 84px;
+
+    }
+
+    /* E-Card Preview & Actions */
+
+    .ecard-preview-wrap {
+
+      display: flex;
+
+      justify-content: center;
+
+      margin: 10px 0 16px;
+
+    }
+
+    #ecardPreviewImg {
+
+      width: 220px;
+
+      height: 391px;
+
+      border-radius: 16px;
+
+      border: 2px solid rgba(255, 209, 102, 0.55);
+
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6);
+
+      object-fit: cover;
+
+      background: #091326;
+
+    }
+
+    .ecard-actions {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 10px;
+
+    }
+
+    .btn-download {
+
+      background: linear-gradient(135deg, #2ec4b6 0%, #208b81 100%);
+
+      color: #fff;
+
+      border: none;
+
+      padding: 12px 20px;
+
+      border-radius: 12px;
+
+      font-size: 15px;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 8px;
+
+      box-shadow: 0 6px 20px rgba(46, 196, 182, 0.35);
+
+      transition: transform 0.2s;
+
+    }
+
+    .btn-download:hover {
+
+      transform: translateY(-1px);
+
+    }
+
+    .btn-copy-wish {
+
+      background: rgba(255, 255, 255, 0.08);
+
+      color: #ffd166;
+
+      border: 1px solid rgba(255, 209, 102, 0.35);
+
+      padding: 10px 16px;
+
+      border-radius: 12px;
+
+      font-size: 14px;
+
+      font-weight: 500;
+
+      cursor: pointer;
+
+    }
+
+    .btn-copy-wish:hover {
+
+      background: rgba(255, 209, 102, 0.15);
+
+    }
+
+    /* Toast Notification */
+
+    .toast {
+
+      position: fixed;
+
+      top: 84px;
+
+      left: 50%;
+
+      transform: translateX(-50%) translateY(-20px);
+
+      background: rgba(16, 42, 67, 0.95);
+
+      border: 1px solid #ffd166;
+
+      color: #fff;
+
+      padding: 10px 20px;
+
+      border-radius: 999px;
+
+      font-size: 14px;
+
+      z-index: 200;
+
+      opacity: 0;
+
+      pointer-events: none;
+
+      transition: all 0.3s ease;
+
+      box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+
+    }
+
+    .toast.show {
+
+      opacity: 1;
+
+      transform: translateX(-50%) translateY(0);
+
+    }
+
+    @media (max-width: 640px) {
+
+      .top-bar {
+
+        justify-content: center;
+
+        padding: 10px 12px;
+
+      }
+
+      .brand h1 { font-size: 17px; }
+
+      .eco-dashboard {
+
+        width: 100%;
+
+        justify-content: space-around;
+
+        padding: 6px 10px;
+
+        gap: 6px;
+
+      }
+
+      .eco-stat:not(:last-child) { padding-right: 8px; }
+
+      .eco-val { font-size: 14px; }
+
+      .eco-lbl { font-size: 10px; }
+
+      .moon { width: 64px; height: 64px; right: 8%; top: 15%; }
+
+      .bottom-controls {
+
+        width: 92%;
+
+        justify-content: center;
+
+      }
+
+      .btn-primary {
+
+        padding: 12px 20px;
+
+        font-size: 15px;
+
+      }
+
+    }
+</style>
+</head>
+<body>
+<!-- Background Scene -->
+<div class="scene">
+<div class="stars" id="starsContainer"></div>
+<canvas id="fireworksCanvas"></canvas>
+<div class="moon"></div>
+<!-- Temple & Bridge Silhouette SVG -->
+<svg class="skyline" viewBox="0 0 1440 160" preserveAspectRatio="none">
+<defs>
+<linearGradient id="templeGrad" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#1e3a6e" />
+<stop offset="100%" stop-color="#09152b" />
+</linearGradient>
+</defs>
+<!-- Distant City & Trees -->
+<path d="M0,160 L0,125 Q80,115 160,128 L240,120 L260,85 L280,120 L350,125 L420,125 L420,160 Z" fill="#0d1e3d"/>
+<!-- Wat Arun Style Prang Silhouette -->
+<g fill="url(#templeGrad)">
+<polygon points="180,130 192,65 204,130" />
+<polygon points="192,65 196,42 200,65" />
+<polygon points="155,130 163,88 171,130" />
+<polygon points="213,130 221,88 229,130" />
+<rect x="145" y="128" width="94" height="32" />
+</g>
+<!-- Rama VIII / Memorial Style Bridge -->
+<path d="M520,160 L520,125 Q680,95 840,125 Q1000,95 1160,125 L1160,160 Z" fill="none" stroke="#1d3557" stroke-width="4"/>
+<line x1="680" y1="55" x2="680" y2="135" stroke="#274775" stroke-width="5"/>
+<line x1="680" y1="62" x2="570" y2="122" stroke="#274775" stroke-width="1.5"/>
+<line x1="680" y1="62" x2="615" y2="118" stroke="#274775" stroke-width="1.5"/>
+<line x1="680" y1="62" x2="790" y2="122" stroke="#274775" stroke-width="1.5"/>
+<line x1="680" y1="62" x2="745" y2="118" stroke="#274775" stroke-width="1.5"/>
+<!-- Right Bank Trees -->
+<path d="M1140,160 L1140,125 Q1240,108 1340,122 Q1390,112 1440,120 L1440,160 Z" fill="#0b1933"/>
+</svg>
+<div class="moon-reflection"></div>
+<div class="water-shimmer"></div>
+<!-- River where Krathongs float -->
+<div class="river-area" id="riverArea"></div>
 </div>
-<button onclick="launchBurstFireworks()" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/35 hover:to-yellow-500/35 border border-yellow-400/40 text-yellow-300 text-xs sm:text-sm font-medium flex items-center gap-2 transition active:scale-95 shadow-md">
-<i class="fa-solid fa-wand-magic-sparkles"></i>
-<span>จุดพลุฉลอง</span>
-</button>
-<button onclick="openCreateModal()" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 border border-yellow-300/50 text-white text-xs sm:text-sm font-semibold flex items-center gap-2 transition shadow-lg shadow-emerald-900/50 active:scale-95">
-<i class="fa-solid fa-plus-circle text-yellow-300"></i>
-<span>สร้างกระทงของฉัน</span>
-</button>
+<!-- Top Header & Eco Impact Counter -->
+<header class="top-bar">
+<div class="brand">
+<h1>ลอยกระทงออนไลน์</h1>
+<span class="brand-badge">🌱 รักษ์โลก ลดโลกร้อน</span>
+</div>
+<div class="eco-dashboard" id="ecoDashboard" title="สถิติการช่วยลดขยะและคาร์บอนจากการลอยออนไลน์">
+<div class="eco-stat">
+<span class="eco-val" id="statCount">1,248</span>
+<span class="eco-lbl">กระทงออนไลน์ (ใบ)</span>
+</div>
+<div class="eco-stat">
+<span class="eco-val" id="statWaste">436.8</span>
+<span class="eco-lbl">ลดขยะในแม่น้ำ (กก.)</span>
+</div>
+<div class="eco-stat">
+<span class="eco-val" id="statCarbon">649.0</span>
+<span class="eco-lbl">ลดก๊าซเรือนกระจก (kgCO₂e)</span>
+</div>
 </div>
 </header>
-<!-- แดชบอร์ดเครื่องนับสถิติลดขยะแบบ Real-time (Eco Impact Counter) -->
-<section aria-label="สถิติการลดขยะและรักษ์โลก" class="relative z-30 w-full px-3 sm:px-8 pt-2.5 sm:pt-3 pointer-events-none">
-<div id="ecoDashboard" class="max-w-5xl mx-auto pointer-events-auto rounded-2xl bg-gradient-to-r from-emerald-950/85 via-night-900/85 to-emerald-950/85 backdrop-blur-md border border-emerald-400/35 shadow-[0_8px_30px_rgba(6,78,59,0.45)] px-3.5 py-2.5 sm:px-6 sm:py-3 transition-all duration-300">
-<div class="flex flex-col md:flex-row items-center justify-between gap-2.5 sm:gap-4">
-<!-- ป้ายหัวข้อ Eco Impact -->
-<div class="flex items-center gap-2.5 self-start md:self-center">
-<div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shrink-0">
-<i class="fa-solid fa-earth-asia text-sm sm:text-base animate-pulse"></i>
-</div>
-<div>
-<div class="flex items-center gap-1.5">
-<span class="text-xs sm:text-sm font-bold text-emerald-300">Eco Impact Counter</span>
-<span id="ecoBadgePill" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30">
+<!-- Bottom Action Bar -->
+<div class="bottom-controls">
+<button class="btn-primary" id="openCreateBtn">
+<span>🪷</span> เลือกกระทง & เขียนคำอธิษฐาน
+</button>
+<button class="btn-secondary" id="myCardBtn" style="display: none;">
 
-                                    ร่วมลดโลกร้อนสดๆ
-</span>
-</div>
-<p class="text-[11px] text-slate-300 hidden sm:block">พลังรักษ์โลกจากผู้ร่วมลอยกระทงออนไลน์ทั้งหมด</p>
-</div>
-</div>
-<!-- ตัวเลขสถิติ 3 ช่อง -->
-<div class="grid grid-cols-3 gap-2 sm:gap-5 w-full md:w-auto">
-<!-- สถิติ 1: จำนวนกระทงออนไลน์ -->
-<div class="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-night-950/75 border border-emerald-500/25 text-center">
-<div class="text-[10px] sm:text-xs text-slate-300 flex items-center justify-center gap-1">
-<i class="fa-solid fa-spa text-yellow-400 text-[10px]"></i>
-<span>ลอยออนไลน์แล้ว</span>
-</div>
-<div class="mt-0.5 font-bold text-sm sm:text-lg text-yellow-300 tabular-nums">
-<span id="statTotalKrathongs">12,480</span> <span class="text-[10px] sm:text-xs font-normal text-slate-300">ใบ</span>
-</div>
-</div>
-<!-- สถิติ 2: ลดขยะในแม่น้ำ -->
-<div class="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-night-950/75 border border-emerald-500/25 text-center">
-<div class="text-[10px] sm:text-xs text-slate-300 flex items-center justify-center gap-1">
-<i class="fa-solid fa-recycle text-emerald-400 text-[10px]"></i>
-<span>ลดขยะในแม่น้ำ</span>
-</div>
-<div class="mt-0.5 font-bold text-sm sm:text-lg text-emerald-300 tabular-nums">
-<span id="statWasteSaved">9,984.0</span> <span class="text-[10px] sm:text-xs font-normal text-slate-300">กก.</span>
-</div>
-</div>
-<!-- สถิติ 3: ลดคาร์บอนฟุตพริ้นท์ -->
-<div class="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-night-950/75 border border-emerald-500/25 text-center">
-<div class="text-[10px] sm:text-xs text-slate-300 flex items-center justify-center gap-1">
-<i class="fa-solid fa-cloud-sun text-sky-400 text-[10px]"></i>
-<span>ลดก๊าซ CO₂</span>
-</div>
-<div class="mt-0.5 font-bold text-sm sm:text-lg text-sky-300 tabular-nums">
-<span id="statCo2Saved">14,976.0</span> <span class="text-[10px] sm:text-xs font-normal text-slate-300">kgCO₂e</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- พื้นที่หลัก: วิววัดอรุณฯ ริมแม่น้ำเจ้าพระยา -->
-<main class="relative flex-1 flex flex-col justify-end min-h-[calc(100vh-148px)] overflow-hidden">
-<!-- ... existing code ... -->
-<!-- ===================================================================== -->
-<!-- MODAL 2: การ์ดภาพ E-Card (1080x1920 Story) & ดาวน์โหลด PNG ไปแชร์ -->
-<!-- ===================================================================== -->
-<div id="viewWishModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md">
-<div class="glass-panel w-full max-w-3xl rounded-3xl overflow-hidden border border-yellow-400/40 shadow-2xl relative max-h-[94vh] flex flex-col">
-<!-- Modal Header -->
-<div class="px-5 py-3.5 sm:px-6 sm:py-4 border-b border-yellow-500/20 flex items-center justify-between bg-gradient-to-r from-emerald-950/80 to-night-900/80">
-<div class="flex items-center gap-2.5">
-<span class="w-8 h-8 rounded-xl bg-yellow-400/20 border border-yellow-400/40 flex items-center justify-center text-yellow-300">
-<i class="fa-solid fa-image"></i>
-</span>
-<div>
-<h3 class="text-base sm:text-lg font-bold text-yellow-300">การ์ดภาพมงคล (E-Card) พร้อมแชร์</h3>
-<p class="text-[11px] sm:text-xs text-emerald-300">ขนาด 1080×1920 px (9:16) พอดีสำหรับ IG Story, Facebook และ LINE</p>
-</div>
-</div>
-<button onclick="closeViewWishModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition">
-<i class="fa-solid fa-xmark"></i>
+      🖼️ ดูการ์ดของฉัน
 </button>
 </div>
-<!-- Modal Body -->
-<div class="p-4 sm:p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-<!-- ฝั่งซ้าย: พรีวิวภาพ E-Card ที่เรนเดอร์จาก Canvas ความละเอียดสูง -->
-<div class="md:col-span-6 flex flex-col items-center justify-center">
-<div class="relative w-full max-w-[260px] sm:max-w-[280px] aspect-[9/16] rounded-2xl overflow-hidden border-2 border-yellow-400/50 shadow-[0_15px_40px_rgba(0,0,0,0.75)] bg-night-950">
-<img id="eCardPreviewImage" alt="การ์ดภาพลอยกระทงออนไลน์" class="w-full h-full object-cover" />
-<div id="eCardLoadingBadge" class="hidden absolute inset-0 bg-night-950/80 flex flex-col items-center justify-center gap-2 text-yellow-300 text-xs">
-<i class="fa-solid fa-spinner fa-spin text-2xl"></i>
-<span>กำลังวาดการ์ดความละเอียดสูง...</span>
+<!-- Toast Message -->
+<div class="toast" id="toast"></div>
+<!-- Modal 1: Create Krathong & Write Wish -->
+<div class="modal-backdrop" id="createModal">
+<div class="modal-card">
+<button class="modal-close" id="closeCreateModal">&times;</button>
+<h2 class="modal-title">ประดิษฐ์กระทงรักษ์โลก</h2>
+<p class="modal-subtitle">เลือกกระทงโทนสีเขียว-ดอกไม้สีเหลือง พร้อมตั้งจิตอธิษฐาน</p>
+<div class="krathong-options" id="krathongOptions">
+<!-- Populated by JS -->
 </div>
+<div class="form-group">
+<div class="form-label-row">
+<label for="userNameInput">ชื่อผู้ลอยกระทง</label>
 </div>
-<span class="text-[11px] text-slate-400 mt-2">
-<i class="fa-solid fa-mobile-screen-button mr-1 text-yellow-400"></i> ภาพตัวอย่างขนาดจริง 1080 × 1920 px
-</span>
+<input type="text" id="userNameInput" class="form-input" placeholder="เช่น น้องใบตอง, ครอบครัวใจดี" maxlength="28" />
 </div>
-<!-- ฝั่งขวา: รายละเอียดคำอธิษฐาน ผลลัพธ์รักษ์โลก และปุ่มดาวน์โหลด -->
-<div class="md:col-span-6 space-y-4 text-left">
-<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/35 text-emerald-300 text-xs font-medium">
-<i class="fa-solid fa-seedling"></i> บันทึกสำเร็จ • ช่วยลดขยะในแม่น้ำ 1 ชิ้น
+<div class="form-group">
+<div class="form-label-row">
+<label for="userWishInput">คำอธิษฐานขอพร</label>
+<button type="button" class="btn-random-wish" id="randomWishBtn">✨ สุ่มคำอธิษฐานมงคล</button>
 </div>
-<div>
-<span class="text-xs text-yellow-400/80 block">กระทงของ</span>
-<h4 id="modalSenderName" class="text-xl sm:text-2xl font-bold text-white break-words mt-0.5">ชื่อผู้ลอย</h4>
-<p id="modalTimestamp" class="text-xs text-slate-400 mt-1">คืนวันเพ็ญ ริมแม่น้ำเจ้าพระยา</p>
+<textarea id="userWishInput" class="form-textarea" placeholder="พิมพ์คำอธิษฐานของคุณที่นี่..." maxlength="140"></textarea>
 </div>
-<!-- กล่องข้อความคำอธิษฐาน -->
-<div class="p-4 rounded-2xl bg-night-950/80 border border-yellow-500/25 relative">
-<i class="fa-solid fa-quote-left text-yellow-500/30 text-lg mb-1 block"></i>
-<p id="modalWishText" class="text-sm text-slate-100 leading-relaxed italic break-words">
+<button type="button" class="btn-primary" id="launchBtn" style="width: 100%; justify-content: center;">
 
-                                "คำอธิษฐาน..."
-</p>
-</div>
-<!-- สรุป Eco Impact ของกระทงใบนี้ -->
-<div class="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/90 to-green-900/50 border border-emerald-400/30 flex items-center justify-between gap-2 text-xs">
-<div class="flex items-center gap-2.5">
-<div class="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-300 shrink-0">
-<i class="fa-solid fa-leaf text-base"></i>
-</div>
-<div>
-<div class="font-semibold text-emerald-200">คุณช่วยลดโลกร้อนได้!</div>
-<div class="text-slate-300">ลดขยะ <strong class="text-yellow-300">0.80 กก.</strong> และลดก๊าซ CO₂ <strong class="text-sky-300">1.20 kgCO₂e</strong></div>
-</div>
-</div>
-</div>
-<!-- ปุ่ม Action หลัก: ดาวน์โหลด PNG และ คัดลอกคำอธิษฐาน -->
-<div class="space-y-2.5 pt-1">
-<button type="button" onclick="downloadECardPNG()" class="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-400 text-night-950 font-bold text-sm sm:text-base shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2.5 transition active:scale-95">
-<i class="fa-solid fa-download text-base"></i>
-<span>ดาวน์โหลดการ์ด (PNG)</span>
+        🕯️ อธิษฐานและปล่อยกระทงลงน้ำ
 </button>
-<div class="grid grid-cols-2 gap-2.5">
-<button type="button" onclick="copyWishToClipboard()" class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 border border-yellow-400/35 text-yellow-200 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 transition active:scale-95">
-<i class="fa-regular fa-copy"></i>
-<span>คัดลอกคำอธิษฐาน</span>
+</div>
+</div>
+<!-- Modal 2: E-Card Preview & Download -->
+<div class="modal-backdrop" id="ecardModal">
+<div class="modal-card" style="max-width: 420px;">
+<button class="modal-close" id="closeEcardModal">&times;</button>
+<h2 class="modal-title" id="ecardModalTitle">การ์ดคำอธิษฐานของคุณ</h2>
+<p class="modal-subtitle">บันทึกภาพ (PNG) ไปแชร์ลง IG Story, Facebook หรือ LINE ได้เลย</p>
+<div class="ecard-preview-wrap">
+<img id="ecardPreviewImg" alt="การ์ดลอยกระทงออนไลน์" />
+</div>
+<div class="ecard-actions">
+<button type="button" class="btn-download" id="downloadCardBtn">
+
+          ⬇️ ดาวน์โหลดการ์ด (PNG)
 </button>
-<button type="button" onclick="launchBurstFireworks()" class="py-2.5 px-3 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/45 border border-emerald-400/40 text-emerald-200 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 transition active:scale-95">
-<i class="fa-solid fa-wand-magic-sparkles"></i>
-<span>จุดพลุฉลอง</span>
+<button type="button" class="btn-copy-wish" id="copyWishBtn">
+
+          📋 คัดลอกคำอธิษฐานไปแชร์
 </button>
 </div>
 </div>
 </div>
+<!-- Hidden High-Res Canvas for E-Card Generation (1080x1920) -->
+<canvas id="ecardCanvas" width="1080" height="1920" style="display: none;"></canvas>
+<script>
+
+    // --- Data & Config ---
+
+    const KRATHONG_STYLES = [
+
+      {
+
+        id: 'banana-marigold',
+
+        name: 'ใบตองดอกดาวเรือง',
+
+        desc: 'กระทงใบตองสีเขียวสดประดับดอกดาวเรืองสีเหลืองทอง'
+
+      },
+
+      {
+
+        id: 'lotus-yellow',
+
+        name: 'ใบบัวดอกบัวเหลือง',
+
+        desc: 'กระทงใบบัวหลวงสีเขียวอ่อนประดับดอกบัวสีเหลืองอร่าม'
+
+      },
+
+      {
+
+        id: 'folded-cassia',
+
+        name: 'ใบตองจีบดอกราชพฤกษ์',
+
+        desc: 'กระทงกลีบผกาซ้อนประดับช่อดอกคูณสีเหลืองมงคล'
+
+      }
+
+    ];
+
+    const SAMPLE_WISHES = [
+
+      "ขอให้สายน้ำพัดพาความทุกข์โศกโรคภัยออกไป และนำพาความสุข ความเจริญรุ่งเรืองเข้ามาในชีวิตตลอดปี",
+
+      "ขอขมาพระแม่คงคา และขอให้สุขภาพแข็งแรง การงานราบรื่น การเงินคล่องตัว คิดสิ่งใดสมความปรารถนา",
+
+      "ขอให้โลกใบนี้กลับมาสดใส อากาศบริสุทธิ์ และขอให้ครอบครัวมีแต่รอยยิ้มและความอบอุ่นตลอดไป",
+
+      "ขอให้ชีวิตสว่างไสวดั่งแสงเทียนในคืนวันเพ็ญ พบเจอแต่กัลยาณมิตรและโอกาสที่ดีในทุกก้าวเดิน",
+
+      "ลอยความกังวลทิ้งไปกับสายน้ำ เปิดรับพลังบวก ความสำเร็จ และความโชคดีเข้ามาเต็มเปี่ยม"
+
+    ];
+
+    const INITIAL_OTHERS = [
+
+      { id: 'init-1', name: 'คุณพลอยใส', wish: 'ขอให้สุขภาพแข็งแรง การงานก้าวหน้า และร่วมลดขยะในแม่น้ำค่ะ 🌱', style: 'banana-marigold', x: 15, y: 22, speed: 0.014, isMine: false },
+
+      { id: 'init-2', name: 'ต้นกล้า รักษ์โลก', wish: 'ขอขมาพระแม่คงคา ลอยออนไลน์ลดโลกร้อนไปด้วยกันครับ', style: 'lotus-yellow', x: 48, y: 48, speed: 0.011, isMine: false },
+
+      { id: 'init-3', name: 'ครอบครัวสุขสันต์', wish: 'ขอให้ครอบครัวมีความสุข สมหวังทุกประการตลอดปีนี้', style: 'folded-cassia', x: 76, y: 32, speed: 0.016, isMine: false },
+
+      { id: 'init-4', name: 'มีนา & ทีมงาน', wish: 'ขอให้โปรเจกต์สำเร็จราบรื่น เฮงๆ ปังๆ ตลอดปี', style: 'banana-marigold', x: 32, y: 68, speed: 0.013, isMine: false }
+
+    ];
+
+    const STORAGE_KEY_MINE = 'loy_krathong_mine_v2';
+
+    const STORAGE_KEY_STATS = 'loy_krathong_stats_v2';
+
+    let selectedStyle = 'banana-marigold';
+
+    let myKrathong = null;
+
+    let activeKrathongs = [];
+
+    let currentViewedKrathong = null;
+
+    // Eco Stats (Base community numbers + user launches)
+
+    let ecoStats = {
+
+      count: 1248,
+
+      wasteKg: 436.8,   // ~0.35 kg waste saved per krathong
+
+      carbonKg: 649.0   // ~0.52 kgCO2e saved per krathong
+
+    };
+
+    // --- SVG Generator for Krathongs (Green & Yellow Theme) ---
+
+    function getKrathongSVG(styleId, size = 110) {
+
+      if (styleId === 'lotus-yellow') {
+
+        return `
+<svg width="${size}" height="${size}" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<radialGradient id="lotusLeaf" cx="50%" cy="50%" r="50%">
+<stop offset="0%" stop-color="#52b788"/>
+<stop offset="80%" stop-color="#2d6a4f"/>
+<stop offset="100%" stop-color="#1b4332"/>
+</radialGradient>
+<linearGradient id="yellowPetal" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#fff3b0"/>
+<stop offset="50%" stop-color="#ffd166"/>
+<stop offset="100%" stop-color="#f4a261"/>
+</linearGradient>
+</defs>
+<!-- Green Lotus Pad Base -->
+<ellipse cx="70" cy="102" rx="58" ry="20" fill="url(#lotusLeaf)" stroke="#1b4332" stroke-width="2"/>
+<path d="M70,102 L22,96 M70,102 L40,115 M70,102 L100,115 M70,102 L118,96" stroke="#74c69d" stroke-width="1.2" opacity="0.6"/>
+<!-- Outer Green Petals -->
+<path d="M30,96 Q42,68 55,96 Z" fill="#40916c"/>
+<path d="M85,96 Q98,68 110,96 Z" fill="#40916c"/>
+<path d="M55,98 Q70,65 85,98 Z" fill="#52b788"/>
+<!-- Yellow Lotus Flower Petals -->
+<path d="M42,92 Q50,56 66,90 Z" fill="url(#yellowPetal)"/>
+<path d="M98,92 Q90,56 74,90 Z" fill="url(#yellowPetal)"/>
+<path d="M56,90 Q70,48 84,90 Z" fill="#ffe169"/>
+<!-- Incense & Candle -->
+<line x1="66" y1="68" x2="63" y2="34" stroke="#d4a373" stroke-width="2"/>
+<line x1="74" y1="68" x2="77" y2="34" stroke="#d4a373" stroke-width="2"/>
+<circle cx="63" cy="33" r="2.2" fill="#ff5400"/>
+<circle cx="77" cy="33" r="2.2" fill="#ff5400"/>
+<rect x="67.5" y="44" width="5" height="26" rx="2" fill="#ffd166"/>
+<path d="M70,27 Q75,36 70,43 Q65,36 70,27 Z" fill="#ff9e00">
+<animate attributeName="opacity" values="0.85;1;0.8" dur="0.8s" repeatCount="indefinite"/>
+</path>
+<circle cx="70" cy="35" r="9" fill="#ffd166" opacity="0.35"/>
+</svg>
+
+        `;
+
+      } else if (styleId === 'folded-cassia') {
+
+        return `
+<svg width="${size}" height="${size}" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+<!-- Tiered Green Banana Leaf Points -->
+<ellipse cx="70" cy="105" rx="54" ry="17" fill="#1b4332"/>
+<g fill="#2d6a4f" stroke="#74c69d" stroke-width="1">
+<polygon points="22,100 32,74 44,100"/>
+<polygon points="40,102 52,72 64,102"/>
+<polygon points="76,102 88,72 100,102"/>
+<polygon points="96,100 108,74 118,100"/>
+<polygon points="58,104 70,70 82,104" fill="#40916c"/>
+</g>
+<!-- Yellow Ratchaphruek / Cassia Clusters -->
+<g fill="#ffd166">
+<circle cx="46" cy="84" r="7"/><circle cx="54" cy="79" r="6"/><circle cx="42" cy="91" r="6"/>
+<circle cx="94" cy="84" r="7"/><circle cx="86" cy="79" r="6"/><circle cx="98" cy="91" r="6"/>
+<circle cx="70" cy="82" r="8" fill="#ffe169"/><circle cx="62" cy="88" r="6"/><circle cx="78" cy="88" r="6"/>
+</g>
+<!-- Incense & Candle -->
+<line x1="65" y1="74" x2="62" y2="36" stroke="#bc6c25" stroke-width="2"/>
+<line x1="75" y1="74" x2="78" y2="36" stroke="#bc6c25" stroke-width="2"/>
+<circle cx="62" cy="35" r="2" fill="#ff4d00"/>
+<circle cx="78" cy="35" r="2" fill="#ff4d00"/>
+<rect x="67.5" y="46" width="5" height="28" rx="2" fill="#fff3b0"/>
+<path d="M70,28 Q75,38 70,45 Q65,38 70,28 Z" fill="#ff9e00"/>
+<circle cx="70" cy="36" r="10" fill="#ffe169" opacity="0.35"/>
+</svg>
+
+        `;
+
+      }
+
+      // Default: Banana Leaf & Yellow Marigold
+
+      return `
+<svg width="${size}" height="${size}" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+<!-- Green Banana Leaf Base -->
+<path d="M22,92 L118,92 L108,112 Q70,120 32,112 Z" fill="#2d6a4f" stroke="#1b4332" stroke-width="2"/>
+<!-- Folded Banana Leaf Crown -->
+<g fill="#40916c" stroke="#95d5b2" stroke-width="1">
+<polygon points="22,92 31,72 41,92"/>
+<polygon points="38,92 48,70 58,92"/>
+<polygon points="55,92 65,68 75,92"/>
+<polygon points="72,92 82,70 92,92"/>
+<polygon points="89,92 99,72 109,92"/>
+<polygon points="103,92 111,75 118,92"/>
+</g>
+<!-- Lush Yellow Marigolds -->
+<g>
+<circle cx="48" cy="84" r="10" fill="#ffb703"/>
+<circle cx="48" cy="84" r="6" fill="#ffd166"/>
+<circle cx="92" cy="84" r="10" fill="#ffb703"/>
+<circle cx="92" cy="84" r="6" fill="#ffd166"/>
+<circle cx="70" cy="81" r="12" fill="#fb8500"/>
+<circle cx="70" cy="81" r="8" fill="#ffd166"/>
+<circle cx="59" cy="88" r="8" fill="#ffd166"/>
+<circle cx="81" cy="88" r="8" fill="#ffd166"/>
+</g>
+<!-- Incense & Candle -->
+<line x1="65" y1="72" x2="62" y2="34" stroke="#d4a373" stroke-width="2"/>
+<line x1="70" y1="70" x2="70" y2="31" stroke="#d4a373" stroke-width="2"/>
+<line x1="75" y1="72" x2="78" y2="34" stroke="#d4a373" stroke-width="2"/>
+<circle cx="62" cy="33" r="2" fill="#ff5400"/>
+<circle cx="70" cy="30" r="2" fill="#ff5400"/>
+<circle cx="78" cy="33" r="2" fill="#ff5400"/>
+<rect x="67.5" y="45" width="5" height="27" rx="2" fill="#ffd166"/>
+<path d="M70,27 Q75,36 70,44 Q65,36 70,27 Z" fill="#ff9e00"/>
+<circle cx="70" cy="35" r="10" fill="#ffd166" opacity="0.38"/>
+</svg>
+
+      `;
+
+    }
+
+    // --- Initialize Background Stars & Fireworks ---
+
+    function initSkyEffects() {
+
+      const starsContainer = document.getElementById('starsContainer');
+
+      for (let i = 0; i < 65; i++) {
+
+        const star = document.createElement('div');
+
+        star.className = 'star';
+
+        const size = Math.random() * 2.5 + 1;
+
+        star.style.width = `${size}px`;
+
+        star.style.height = `${size}px`;
+
+        star.style.left = `${Math.random() * 100}%`;
+
+        star.style.top = `${Math.random() * 88}%`;
+
+        star.style.setProperty('--dur', `${2 + Math.random() * 3}s`);
+
+        starsContainer.appendChild(star);
+
+      }
+
+    }
+
+    // Simple Canvas Fireworks
+
+    const fwCanvas = document.getElementById('fireworksCanvas');
+
+    const fwCtx = fwCanvas.getContext('2d');
+
+    let particles = [];
+
+    function resizeFwCanvas() {
+
+      fwCanvas.width = window.innerWidth;
+
+      fwCanvas.height = window.innerHeight * 0.56;
+
+    }
+
+    window.addEventListener('resize', resizeFwCanvas);
+
+    resizeFwCanvas();
+
+    function spawnFirework(x, y) {
+
+      const colors = ['#ffd166', '#80ed99', '#ff9f1c', '#fff3b0', '#4cc9f0'];
+
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      for (let i = 0; i < 36; i++) {
+
+        const angle = (Math.PI * 2 * i) / 36;
+
+        const speed = 1.5 + Math.random() * 3.2;
+
+        particles.push({
+
+          x, y,
+
+          vx: Math.cos(angle) * speed,
+
+          vy: Math.sin(angle) * speed,
+
+          alpha: 1,
+
+          color
+
+        });
+
+      }
+
+    }
+
+    function animateFireworks() {
+
+      fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+
+      if (Math.random() < 0.018) {
+
+        spawnFirework(
+
+          fwCanvas.width * (0.15 + Math.random() * 0.7),
+
+          fwCanvas.height * (0.15 + Math.random() * 0.45)
+
+        );
+
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+
+        const p = particles[i];
+
+        p.x += p.vx;
+
+        p.y += p.vy;
+
+        p.vy += 0.035;
+
+        p.alpha -= 0.016;
+
+        if (p.alpha <= 0) {
+
+          particles.splice(i, 1);
+
+          continue;
+
+        }
+
+        fwCtx.globalAlpha = p.alpha;
+
+        fwCtx.fillStyle = p.color;
+
+        fwCtx.beginPath();
+
+        fwCtx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+
+        fwCtx.fill();
+
+      }
+
+      fwCtx.globalAlpha = 1;
+
+      requestAnimationFrame(animateFireworks);
+
+    }
+
+    animateFireworks();
+
+    // --- Eco Counter Functions ---
+
+    function loadEcoStats() {
+
+      const saved = localStorage.getItem(STORAGE_KEY_STATS);
+
+      if (saved) {
+
+        try {
+
+          ecoStats = JSON.parse(saved);
+
+        } catch (e) {}
+
+      }
+
+      renderEcoStats(false);
+
+    }
+
+    function animateValue(el, start, end, decimals = 0, duration = 900) {
+
+      const startTime = performance.now();
+
+      function update(now) {
+
+        const progress = Math.min((now - startTime) / duration, 1);
+
+        const ease = 1 - Math.pow(1 - progress, 3);
+
+        const current = start + (end - start) * ease;
+
+        el.textContent = current.toLocaleString('en-US', {
+
+          minimumFractionDigits: decimals,
+
+          maximumFractionDigits: decimals
+
+        });
+
+        if (progress < 1) requestAnimationFrame(update);
+
+      }
+
+      requestAnimationFrame(update);
+
+    }
+
+    function renderEcoStats(animate = true) {
+
+      const countEl = document.getElementById('statCount');
+
+      const wasteEl = document.getElementById('statWaste');
+
+      const carbonEl = document.getElementById('statCarbon');
+
+      if (animate) {
+
+        animateValue(countEl, ecoStats.count - 1, ecoStats.count, 0);
+
+        animateValue(wasteEl, ecoStats.wasteKg - 0.35, ecoStats.wasteKg, 1);
+
+        animateValue(carbonEl, ecoStats.carbonKg - 0.52, ecoStats.carbonKg, 1);
+
+        const dash = document.getElementById('ecoDashboard');
+
+        dash.classList.add('pulse');
+
+        setTimeout(() => dash.classList.remove('pulse'), 1600);
+
+      } else {
+
+        countEl.textContent = ecoStats.count.toLocaleString('en-US');
+
+        wasteEl.textContent = ecoStats.wasteKg.toFixed(1);
+
+        carbonEl.textContent = ecoStats.carbonKg.toFixed(1);
+
+      }
+
+    }
+
+    function incrementEcoStats() {
+
+      ecoStats.count += 1;
+
+      ecoStats.wasteKg = +(ecoStats.wasteKg + 0.35).toFixed(1);
+
+      ecoStats.carbonKg = +(ecoStats.carbonKg + 0.52).toFixed(1);
+
+      localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(ecoStats));
+
+      renderEcoStats(true);
+
+    }
+
+    // --- River & Krathong Rendering ---
+
+    const riverArea = document.getElementById('riverArea');
+
+    function renderKrathongOptions() {
+
+      const container = document.getElementById('krathongOptions');
+
+      container.innerHTML = '';
+
+      KRATHONG_STYLES.forEach(item => {
+
+        const div = document.createElement('div');
+
+        div.className = `k-option ${item.id === selectedStyle ? 'selected' : ''}`;
+
+        div.innerHTML = `
+
+          ${getKrathongSVG(item.id, 72)}
+<div class="k-option-name">${item.name}</div>
+
+        `;
+
+        div.onclick = () => {
+
+          selectedStyle = item.id;
+
+          renderKrathongOptions();
+
+        };
+
+        container.appendChild(div);
+
+      });
+
+    }
+
+    function addKrathongToRiver(kData) {
+
+      const el = document.createElement('div');
+
+      el.className = `krathong-item ${kData.isMine ? 'is-mine' : ''}`;
+el.id = `dom-${kData.id}`;
+
+      // Scale slightly by depth (y from 10% to 75%)
+
+      const scale = 0.72 + (kData.y / 100) * 0.48;
+
+      el.style.top = `${kData.y}%`;
+
+      el.style.left = `${kData.x}%`;
+
+      el.style.zIndex = Math.floor(kData.y);
+
+      el.style.transform = `scale(${scale})`;
+
+      el.style.setProperty('--bob-dur', `${3 + Math.random() * 1.5}s`);
+
+      const prefix = kData.isMine ? '⭐ ' : '🪷 ';
+
+      el.innerHTML = `
+<div class="krathong-bob">
+<div class="krathong-label">${prefix}${escapeHtml(kData.name)}</div>
+
+          ${getKrathongSVG(kData.style, 105)}
+<div class="ripple-ring"></div>
 </div>
-</div>
-</div>
-<!-- Canvas ลับสำหรับสร้างภาพ E-Card ความละเอียดสูง 1080x1920 -->
-<canvas id="eCardGeneratorCanvas" width="1080" height="1920" class="hidden"></canvas>
-<!-- Toast แจ้งเตือนมุมล่างขวา -->
-<!-- ... existing code ... -->
 
-            // State หลักของแอป
+      `;
 
-            let selectedStyle = "marigold";
+      el.onclick = () => openEcardModal(kData);
 
-            let activeKrathongs = [];
+      riverArea.appendChild(el);
 
-            let currentlyViewingKrathong = null;
+      kData.el = el;
 
-            let currentECardDataUrl = "";
+      activeKrathongs.push(kData);
 
-            const STORAGE_KEY = "eco_loy_krathong_user_items_v1";
+    }
 
-            // ค่าฐานของสถิติชุมชนรักษ์โลก (Eco Impact Base Metrics)
+    function animateRiver() {
 
-            // สมมติค่าเฉลี่ย: กระทง 1 ใบลดขยะได้ 0.8 กก. และลดคาร์บอนฟุตพริ้นท์ได้ 1.2 kgCO2e
+      activeKrathongs.forEach(k => {
 
-            const ECO_BASE_KRATHONGS = 12480;
+        k.x += k.speed;
 
-            const WASTE_KG_PER_KRATHONG = 0.8;
+        if (k.x > 105) {
 
-            const CO2_KG_PER_KRATHONG = 1.2;
+          k.x = -15;
 
-            let displayedEcoCount = ECO_BASE_KRATHONGS;
+        }
 
-            let ecoAnimFrameId = null;
+        if (k.el) {
 
-            // ฟังก์ชันอัปเดตและแอนิเมตตัวเลข Eco Impact Counter แบบนุ่มนวล
+          k.el.style.left = `${k.x}%`;
 
-            function updateEcoImpactDashboard(userSavedCount, animate = true) {
+        }
 
-                const targetCount = ECO_BASE_KRATHONGS + userSavedCount;
+      });
 
-                const dashboard = document.getElementById("ecoDashboard");
+      requestAnimationFrame(animateRiver);
 
-                if (!animate) {
+    }
 
-                    displayedEcoCount = targetCount;
+    function escapeHtml(str) {
 
-                    renderEcoNumbers(displayedEcoCount);
+      return str.replace(/[&<>"']/g, m => ({
 
-                    return;
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 
-                }
+      }[m]));
 
-                // เพิ่มเอฟเฟกต์เรืองแสงเมื่อตัวเลขขยับขึ้น
+    }
 
-                if (dashboard) {
+    // --- E-Card Generator (1080x1920 High-Res PNG) ---
 
-                    dashboard.classList.add("ring-2", "ring-yellow-400/70", "scale-[1.01]");
+    function generateEcardImage(kData, callback) {
 
-                    setTimeout(() => {
+      const canvas = document.getElementById('ecardCanvas');
 
-                        dashboard.classList.remove("ring-2", "ring-yellow-400/70", "scale-[1.01]");
+      const ctx = canvas.getContext('2d');
 
-                    }, 900);
+      const W = 1080;
 
-                }
+      const H = 1920;
 
-                const startVal = displayedEcoCount;
+      // 1. Background Sky & Water Gradient
 
-                const diff = targetCount - startVal;
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
 
-                const duration = 1100; // 1.1 วินาที
+      bgGrad.addColorStop(0, '#060c1f');
 
-                const startTime = performance.now();
+      bgGrad.addColorStop(0.45, '#11264f');
 
-                if (ecoAnimFrameId) cancelAnimationFrame(ecoAnimFrameId);
+      bgGrad.addColorStop(0.62, '#1b3b6f');
 
-                function step(now) {
+      bgGrad.addColorStop(0.63, '#0b203d');
 
-                    const elapsed = now - startTime;
+      bgGrad.addColorStop(1, '#040b18');
 
-                    const progress = Math.min(elapsed / duration, 1);
+      ctx.fillStyle = bgGrad;
 
-                    // Ease-out cubic
+      ctx.fillRect(0, 0, W, H);
 
-                    const eased = 1 - Math.pow(1 - progress, 3);
+      // 2. Decorative Stars
 
-                    const current = startVal + diff * eased;
+      ctx.fillStyle = '#ffffff';
 
-                    displayedEcoCount = current;
+      for (let i = 0; i < 70; i++) {
 
-                    renderEcoNumbers(current);
+        const sx = (i * 173) % W;
 
-                    if (progress < 1) {
+        const sy = (i * 97) % (H * 0.52);
 
-                        ecoAnimFrameId = requestAnimationFrame(step);
+        const sr = (i % 3) + 1.2;
 
-                    } else {
+        ctx.globalAlpha = 0.35 + (i % 5) * 0.12;
 
-                        displayedEcoCount = targetCount;
+        ctx.beginPath();
 
-                        renderEcoNumbers(targetCount);
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
 
-                    }
+        ctx.fill();
 
-                }
+      }
 
-                ecoAnimFrameId = requestAnimationFrame(step);
+      ctx.globalAlpha = 1;
 
-            }
+      // 3. Full Moon & Glow
 
-            function renderEcoNumbers(krathongTotal) {
+      const moonX = W * 0.78;
 
-                const countInt = Math.round(krathongTotal);
+      const moonY = H * 0.16;
 
-                const wasteKg = krathongTotal * WASTE_KG_PER_KRATHONG;
+      const moonGlow = ctx.createRadialGradient(moonX, moonY, 30, moonX, moonY, 240);
 
-                const co2Kg = krathongTotal * CO2_KG_PER_KRATHONG;
+      moonGlow.addColorStop(0, 'rgba(255, 236, 153, 0.55)');
 
-                const elCount = document.getElementById("statTotalKrathongs");
+      moonGlow.addColorStop(1, 'rgba(255, 209, 102, 0)');
 
-                const elWaste = document.getElementById("statWasteSaved");
+      ctx.fillStyle = moonGlow;
 
-                const elCo2 = document.getElementById("statCo2Saved");
+      ctx.beginPath();
 
-                if (elCount) elCount.textContent = countInt.toLocaleString("en-US");
+      ctx.arc(moonX, moonY, 240, 0, Math.PI * 2);
 
-                if (elWaste) elWaste.textContent = wasteKg.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      ctx.fill();
 
-                if (elCo2) elCo2.textContent = co2Kg.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      ctx.fillStyle = '#fff3b0';
 
-            }
+      ctx.beginPath();
 
-            // 4. ฟังก์ชันสร้าง SVG กระทงโทนสีเขียว + ดอกไม้สีเหลือง แบบละเอียดประณีต
-<!-- ... existing code ... -->
+      ctx.arc(moonX, moonY, 78, 0, Math.PI * 2);
 
-                // บันทึกลง localStorage
+      ctx.fill();
 
-                saveUserKrathongToStorage(newKrathong);
+      // 4. Gold Ornamental Frame
 
-                // อัปเดตตัวเลขสถิติ Eco Impact Counter แบบแอนิเมชันพุ่งขึ้น
+      ctx.strokeStyle = 'rgba(255, 209, 102, 0.55)';
 
-                const totalUserSaved = loadUserKrathongsFromStorage().length;
+      ctx.lineWidth = 4;
 
-                updateEcoImpactDashboard(totalUserSaved, true);
+      ctx.strokeRect(48, 48, W - 96, H - 96);
 
-                // เพิ่มลงในแม่น้ำและ Render ทันที
+      ctx.strokeStyle = 'rgba(255, 209, 102, 0.25)';
 
-                activeKrathongs.push(newKrathong);
+      ctx.lineWidth = 2;
 
-                renderKrathongElement(newKrathong, true);
+      ctx.strokeRect(64, 64, W - 128, H - 128);
 
-                updateKrathongCounter();
+      // 5. Header Typography
 
-                // ปิด Modal สร้าง และจุดพลุฉลอง
+      ctx.textAlign = 'center';
 
-                closeCreateModal();
+      ctx.fillStyle = '#ffd166';
 
-                launchBurstFireworks();
+      ctx.font = 'bold 64px "Prompt", sans-serif';
 
-                showToast(`🌿 รักษ์โลกสำเร็จ! ลดขยะ +0.8 กก. และลด CO₂ +1.2 kgCO₂e`);
+      ctx.fillText('ลอยกระทงออนไลน์', W / 2, 185);
 
-                // ล้างฟอร์มคำอธิษฐานเผื่อสร้างใบถัดไป (คงชื่อไว้ให้สะดวก)
+      // Eco Pill Badge
 
-                document.getElementById("wishText").value = "";
+      ctx.fillStyle = 'rgba(45, 106, 79, 0.85)';
 
-                updateCharCount();
+      roundRect(ctx, W / 2 - 220, 215, 440, 56, 28);
 
-                // เปิดหน้าต่างการ์ด E-Card ความละเอียดสูงให้ผู้ใช้ดูและกดดาวน์โหลดทันที
+      ctx.fill();
 
-                setTimeout(() => {
+      ctx.strokeStyle = '#95d5b2';
 
-                    openViewWishModal(newKrathong);
+      ctx.lineWidth = 2;
 
-                }, 550);
+      ctx.stroke();
 
-            }
+      ctx.fillStyle = '#e9f5db';
 
-            // 9. ระบบ LocalStorage สำหรับกระทงของผู้ใช้
-<!-- ... existing code ... -->
+      ctx.font = '500 28px "Prompt", sans-serif';
 
-            // 12. เปิด / ปิด Modal อ่านคำอธิษฐานและสร้าง E-Card 1080x1920
+      ctx.fillText('🌱 รักษ์โลก ลดโลกร้อน • Zero Waste', W / 2, 253);
 
-            function openViewWishModal(item) {
+      // 6. Wish Card Box
 
-                currentlyViewingKrathong = item;
+      ctx.fillStyle = 'rgba(9, 20, 42, 0.72)';
 
-                document.getElementById("modalSenderName").textContent = item.name;
+      roundRect(ctx, 110, 330, W - 220, 560, 36);
 
-                document.getElementById("modalWishText").textContent = `"${item.wish}"`;
+      ctx.fill();
 
-                document.getElementById("modalTimestamp").textContent = item.createdAt
+      ctx.strokeStyle = 'rgba(255, 209, 102, 0.4)';
 
-                    ? `ลอยเมื่อ ${item.createdAt} • ลอยกระทงออนไลน์รักษ์โลก`
+      ctx.lineWidth = 2.5;
 
-                    : `คืนวันเพ็ญ ริมแม่น้ำเจ้าพระยา • ลอยกระทงออนไลน์รักษ์โลก`;
+      ctx.stroke();
 
-                const modal = document.getElementById("viewWishModal");
+      ctx.fillStyle = '#95d5b2';
 
-                modal.classList.remove("hidden");
+      ctx.font = '500 30px "Prompt", sans-serif';
 
-                modal.classList.add("flex");
+      ctx.fillText('คำอธิษฐานของ', W / 2, 415);
 
-                // เรนเดอร์การ์ดภาพความละเอียดสูง 1080x1920
+      ctx.fillStyle = '#ffd166';
 
-                renderHighResECard(item);
+      ctx.font = 'bold 48px "Prompt", sans-serif';
 
-            }
+      ctx.fillText(kData.name, W / 2, 485);
 
-            // ฟังก์ชันวาดการ์ดภาพ E-Card ความละเอียด 1080x1920 (9:16) ลงบน HTML5 Canvas
+      // Divider line
 
-            async function renderHighResECard(item) {
+      ctx.strokeStyle = 'rgba(255, 209, 102, 0.3)';
 
-                const loadingBadge = document.getElementById("eCardLoadingBadge");
+      ctx.beginPath();
 
-                const previewImg = document.getElementById("eCardPreviewImage");
+      ctx.moveTo(260, 525);
 
-                if (loadingBadge) loadingBadge.classList.remove("hidden");
+      ctx.lineTo(W - 260, 525);
 
-                // รอให้ Google Fonts (Prompt / Chonburi) โหลดพร้อมใช้งานบน Canvas
+      ctx.stroke();
 
-                if (document.fonts && document.fonts.ready) {
+      // Wrap Thai Wish Text
 
-                    try { await document.fonts.ready; } catch (e) {}
+      ctx.fillStyle = '#f8fafc';
 
-                }
+      ctx.font = '400 38px "Prompt", sans-serif';
 
-                const eCanvas = document.getElementById("eCardGeneratorCanvas");
+      wrapThaiText(ctx, `“${kData.wish}”`, W / 2, 600, W - 300, 58);
 
-                const c = eCanvas.getContext("2d");
+      // 7. Water Ripples & Krathong Illustration
 
-                const W = 1080;
+      const kCenterY = 1280;
 
-                const H = 1920;
+      ctx.strokeStyle = 'rgba(144, 224, 239, 0.32)';
 
-                c.clearRect(0, 0, W, H);
+      ctx.lineWidth = 3;
 
-                // 1) พื้นหลังท้องฟ้ายามค่ำคืนไล่เฉดสีหรูหรา
+      ctx.beginPath();
 
-                const skyGrad = c.createLinearGradient(0, 0, 0, H * 0.65);
+      ctx.ellipse(W / 2, kCenterY + 135, 240, 42, 0, 0, Math.PI * 2);
 
-                skyGrad.addColorStop(0, "#030712");
+      ctx.stroke();
 
-                skyGrad.addColorStop(0.45, "#0b1938");
+      ctx.beginPath();
 
-                skyGrad.addColorStop(1, "#102a56");
+      ctx.ellipse(W / 2, kCenterY + 135, 330, 62, 0, 0, Math.PI * 2);
 
-                c.fillStyle = skyGrad;
+      ctx.stroke();
 
-                c.fillRect(0, 0, W, H * 0.65);
+      // Convert Krathong SVG to Image and Draw
 
-                // 2) ดวงดาวระยิบระยับบนท้องฟ้า
+      const svgString = getKrathongSVG(kData.style, 440);
 
-                for (let i = 0; i < 85; i++) {
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
 
-                    const sx = ((i * 197) % 1020) + 30;
+      const url = URL.createObjectURL(svgBlob);
 
-                    const sy = ((i * 131) % 850) + 40;
+      const img = new Image();
 
-                    const sr = (i % 3) + 1.2;
+      img.onload = () => {
 
-                    c.beginPath();
+        ctx.drawImage(img, W / 2 - 220, kCenterY - 220, 440, 440);
 
-                    c.arc(sx, sy, sr, 0, Math.PI * 2);
+        URL.revokeObjectURL(url);
 
-                    c.fillStyle = i % 4 === 0 ? "rgba(254, 240, 138, 0.85)" : "rgba(255, 255, 255, 0.65)";
+        // 8. Footer Eco Impact Note
 
-                    c.fill();
+        ctx.fillStyle = 'rgba(128, 237, 153, 0.9)';
 
-                }
+        ctx.font = '500 30px "Prompt", sans-serif';
 
-                // 3) พระจันทร์เต็มดวงเรืองแสงด้านขวาบน
+        ctx.fillText('ร่วมลดขยะในแม่น้ำ 0.35 กก. และลดคาร์บอน 0.52 kgCO₂e', W / 2, 1690);
 
-                const moonX = 830;
+        const today = new Date().toLocaleDateString('th-TH', {
 
-                const moonY = 310;
+          year: 'numeric', month: 'long', day: 'numeric'
 
-                const moonAura = c.createRadialGradient(moonX, moonY, 60, moonX, moonY, 320);
+        });
 
-                moonAura.addColorStop(0, "rgba(254, 240, 138, 0.45)");
+        ctx.fillStyle = '#94a3b8';
 
-                moonAura.addColorStop(0.5, "rgba(250, 204, 21, 0.14)");
+        ctx.font = '400 26px "Prompt", sans-serif';
 
-                moonAura.addColorStop(1, "rgba(250, 204, 21, 0)");
+        ctx.fillText(`วันลอยกระทง • ${today}`, W / 2, 1750);
 
-                c.fillStyle = moonAura;
+        callback(canvas.toDataURL('image/png'));
 
-                c.beginPath();
+      };
 
-                c.arc(moonX, moonY, 320, 0, Math.PI * 2);
+      img.src = url;
 
-                c.fill();
+    }
 
-                const moonBody = c.createRadialGradient(moonX - 25, moonY - 25, 15, moonX, moonY, 95);
+    function roundRect(ctx, x, y, w, h, r) {
 
-                moonBody.addColorStop(0, "#fffbeb");
+      ctx.beginPath();
 
-                moonBody.addColorStop(0.55, "#fef08a");
+      ctx.moveTo(x + r, y);
 
-                moonBody.addColorStop(1, "#eab308");
+      ctx.arcTo(x + w, y, x + w, y + h, r);
 
-                c.fillStyle = moonBody;
+      ctx.arcTo(x + w, y + h, x, y + h, r);
 
-                c.beginPath();
+      ctx.arcTo(x, y + h, x, y, r);
 
-                c.arc(moonX, moonY, 95, 0, Math.PI * 2);
+      ctx.arcTo(x, y, x + w, y, r);
 
-                c.fill();
+      ctx.closePath();
 
-                // 4) พลุเฉลิมฉลองบนท้องฟ้าในการ์ด
+    }
 
-                drawCanvasFirework(c, 240, 340, 110, "#fde047");
+    function wrapThaiText(ctx, text, x, startY, maxWidth, lineHeight) {
 
-                drawCanvasFirework(c, 520, 250, 85, "#4ade80");
+      // Use Intl.Segmenter if available for accurate Thai word wrapping
 
-                // 5) เงาวัดอรุณราชวรารามเรืองแสงตรงเส้นขอบฟ้า
+      let segments = [];
 
-                const horizonY = 1130;
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
 
-                c.save();
+        const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
 
-                c.fillStyle = "#09132b";
+        segments = Array.from(segmenter.segment(text)).map(s => s.segment);
 
-                c.fillRect(0, horizonY - 22, W, 26);
+      } else {
 
-                // พระปรางค์องค์กลาง
+        segments = text.split('');
 
-                const prangGrad = c.createLinearGradient(0, horizonY - 250, 0, horizonY);
+      }
 
-                prangGrad.addColorStop(0, "#fef08a");
+      let line = '';
 
-                prangGrad.addColorStop(0.55, "#f59e0b");
+      let y = startY;
 
-                prangGrad.addColorStop(1, "#451a03");
+      for (let i = 0; i < segments.length; i++) {
 
-                c.fillStyle = prangGrad;
+        const testLine = line + segments[i];
 
-                c.beginPath();
+        const metrics = ctx.measureText(testLine);
 
-                c.moveTo(210, horizonY);
+        if (metrics.width > maxWidth && line !== '') {
 
-                c.lineTo(245, horizonY - 120);
+          ctx.fillText(line.trim(), x, y);
 
-                c.lineTo(270, horizonY - 210);
+          line = segments[i];
 
-                c.lineTo(280, horizonY - 255);
+          y += lineHeight;
 
-                c.lineTo(290, horizonY - 210);
+        } else {
 
-                c.lineTo(315, horizonY - 120);
+          line = testLine;
 
-                c.lineTo(350, horizonY);
+        }
 
-                c.closePath();
+      }
 
-                c.fill();
+      if (line.trim()) {
 
-                // ปรางค์ทิศซ้ายและขวา
+        ctx.fillText(line.trim(), x, y);
 
-                c.fillStyle = "rgba(253, 224, 71, 0.55)";
+      }
 
-                c.beginPath();
+    }
 
-                c.moveTo(130, horizonY);
+    // --- UI Modals & Event Handlers ---
 
-                c.lineTo(155, horizonY - 135);
+    const createModal = document.getElementById('createModal');
 
-                c.lineTo(180, horizonY);
+    const ecardModal = document.getElementById('ecardModal');
 
-                c.closePath();
+    const toastEl = document.getElementById('toast');
 
-                c.fill();
+    function showToast(msg) {
 
-                c.beginPath();
+      toastEl.textContent = msg;
 
-                c.moveTo(380, horizonY);
+      toastEl.classList.add('show');
 
-                c.lineTo(405, horizonY - 135);
+      setTimeout(() => toastEl.classList.remove('show'), 2800);
 
-                c.lineTo(430, horizonY);
+    }
 
-                c.closePath();
+    document.getElementById('openCreateBtn').onclick = () => {
 
-                c.fill();
+      renderKrathongOptions();
 
-                // สะพานโค้งข้ามแม่น้ำฝั่งขวา
+      createModal.classList.add('active');
 
-                c.strokeStyle = "rgba(253, 224, 71, 0.45)";
+    };
 
-                c.lineWidth = 4;
+    document.getElementById('closeCreateModal').onclick = () => {
 
-                c.beginPath();
+      createModal.classList.remove('active');
 
-                c.moveTo(520, horizonY - 25);
+    };
 
-                c.quadraticCurveTo(790, horizonY - 95, 1080, horizonY - 25);
+    document.getElementById('closeEcardModal').onclick = () => {
 
-                c.stroke();
+      ecardModal.classList.remove('active');
 
-                c.restore();
+    };
 
-                // 6) ผืนน้ำแม่น้ำเจ้าพระยาครึ่งล่าง
+    document.getElementById('randomWishBtn').onclick = () => {
 
-                const riverGrad = c.createLinearGradient(0, horizonY, 0, H);
+      const wishInput = document.getElementById('userWishInput');
 
-                riverGrad.addColorStop(0, "#0a1d42");
+      const random = SAMPLE_WISHES[Math.floor(Math.random() * SAMPLE_WISHES.length)];
 
-                riverGrad.addColorStop(0.45, "#0d2859");
+      wishInput.value = random;
 
-                riverGrad.addColorStop(1, "#040a1a");
+    };
 
-                c.fillStyle = riverGrad;
+    document.getElementById('launchBtn').onclick = () => {
 
-                c.fillRect(0, horizonY, W, H - horizonY);
+      const nameVal = document.getElementById('userNameInput').value.trim() || 'ผู้ใจบุญรักษ์โลก';
 
-                // เส้นขอบน้ำสีทอง
+      const wishVal = document.getElementById('userWishInput').value.trim() || SAMPLE_WISHES[0];
 
-                c.strokeStyle = "rgba(250, 204, 21, 0.4)";
+      // Remove old personal krathong if re-launching
 
-                c.lineWidth = 3;
+      if (myKrathong && myKrathong.el) {
 
-                c.beginPath();
+        myKrathong.el.remove();
 
-                c.moveTo(0, horizonY);
+        activeKrathongs = activeKrathongs.filter(k => k.id !== myKrathong.id);
 
-                c.lineTo(W, horizonY);
+      }
 
-                c.stroke();
+      myKrathong = {
 
-                // แสงจันทร์สะท้อนบนผิวน้ำ
+        id: 'mine-' + Date.now(),
 
-                const waterMoonGlow = c.createRadialGradient(moonX, horizonY + 180, 20, moonX, horizonY + 260, 340);
+        name: nameVal,
 
-                waterMoonGlow.addColorStop(0, "rgba(254, 240, 138, 0.28)");
+        wish: wishVal,
 
-                waterMoonGlow.addColorStop(1, "rgba(254, 240, 138, 0)");
+        style: selectedStyle,
 
-                c.fillStyle = waterMoonGlow;
+        x: 24,
 
-                c.fillRect(450, horizonY, 630, 600);
+        y: 42,
 
-                // ระลอกคลื่นน้ำสีทองอ่อน
+        speed: 0.015,
 
-                for (let r = 0; r < 18; r++) {
+        isMine: true
 
-                    const ry = horizonY + 55 + r * 42;
+      };
 
-                    const rw = 140 + (r % 4) * 65;
+      localStorage.setItem(STORAGE_KEY_MINE, JSON.stringify({
 
-                    const rx = ((r * 239) % 760) + 90;
+        name: myKrathong.name,
 
-                    c.strokeStyle = "rgba(253, 224, 71, 0.16)";
+        wish: myKrathong.wish,
 
-                    c.lineWidth = 2.5;
+        style: myKrathong.style
 
-                    c.beginPath();
+      }));
 
-                    c.moveTo(rx, ry);
+      addKrathongToRiver(myKrathong);
 
-                    c.lineTo(rx + rw, ry);
+      incrementEcoStats();
 
-                    c.stroke();
+      // Celebrate with fireworks
 
-                }
+      spawnFirework(fwCanvas.width * 0.3, fwCanvas.height * 0.3);
 
-                // 7) กรอบทองมงคลรอบการ์ด (Inner Frame)
+      setTimeout(() => spawnFirework(fwCanvas.width * 0.7, fwCanvas.height * 0.25), 250);
 
-                c.strokeStyle = "rgba(250, 204, 21, 0.45)";
+      createModal.classList.remove('active');
 
-                c.lineWidth = 4;
+      document.getElementById('myCardBtn').style.display = 'inline-flex';
 
-                roundRectPath(c, 42, 42, W - 84, H - 84, 44);
+      showToast('🪷 ปล่อยกระทงออนไลน์เรียบร้อยแล้ว ขอบคุณที่ร่วมลดโลกร้อน!');
 
-                c.stroke();
+      // Automatically open E-Card after short delay
 
-                // 8) ส่วนหัวของการ์ด: ป้ายรักษ์โลก + ชื่อเทศกาล
+      setTimeout(() => openEcardModal(myKrathong), 700);
 
-                // ป้าย Badge สีเขียวมรกต
+    };
 
-                const badgeW = 650;
+    document.getElementById('myCardBtn').onclick = () => {
 
-                const badgeH = 64;
+      if (myKrathong) openEcardModal(myKrathong);
 
-                const badgeX = (W - badgeW) / 2;
+    };
 
-                const badgeY = 92;
+    function openEcardModal(kData) {
 
-                c.fillStyle = "rgba(6, 78, 59, 0.88)";
+      currentViewedKrathong = kData;
 
-                roundRectPath(c, badgeX, badgeY, badgeW, badgeH, 32);
+      document.getElementById('ecardModalTitle').textContent =
 
-                c.fill();
+        kData.isMine ? 'การ์ดคำอธิษฐานของคุณ' : `คำอธิษฐานของ ${kData.name}`;
 
-                c.strokeStyle = "#4ade80";
+      generateEcardImage(kData, (dataUrl) => {
 
-                c.lineWidth = 2.5;
+        document.getElementById('ecardPreviewImg').src = dataUrl;
 
-                c.stroke();
+        ecardModal.classList.add('active');
 
-                c.fillStyle = "#86efac";
+      });
 
-                c.font = "600 28px 'Prompt', sans-serif";
+    }
 
-                c.textAlign = "center";
+    document.getElementById('downloadCardBtn').onclick = () => {
 
-                c.textBaseline = "middle";
+      const imgSrc = document.getElementById('ecardPreviewImg').src;
 
-                c.fillText("🌿 ลอยกระทงออนไลน์ รักษ์โลก ลดโลกร้อน", W / 2, badgeY + badgeH / 2 + 2);
+      if (!imgSrc) return;
 
-                // ชื่อหัวข้อหลัก "คืนวันเพ็ญ เดือนสิบสอง"
+      const link = document.createElement('a');
 
-                c.fillStyle = "#fde047";
+      link.download = `loy-krathong-${Date.now()}.png`;
 
-                c.font = "400 64px 'Chonburi', 'Prompt', serif";
+      link.href = imgSrc;
 
-                c.shadowColor = "rgba(0, 0, 0, 0.65)";
+      link.click();
 
-                c.shadowBlur = 18;
+      showToast('📥 บันทึกการ์ดภาพ PNG เรียบร้อยแล้ว');
 
-                c.fillText("ลอยกระทงออนไลน์", W / 2, 232);
+    };
 
-                c.shadowBlur = 0;
+    document.getElementById('copyWishBtn').onclick = () => {
 
-                c.fillStyle = "#e2e8f0";
+      if (!currentViewedKrathong) return;
 
-                c.font = "400 30px 'Prompt', sans-serif";
+      const text = `🪷 ลอยกระทงออนไลน์ รักษ์โลก ลดโลกร้อน\nของ: ${currentViewedKrathong.name}\n“${currentViewedKrathong.wish}”`;
 
-                c.fillText("สืบสานประเพณีไทย ไร้ขยะในแม่น้ำเจ้าพระยา", W / 2, 294);
+      navigator.clipboard.writeText(text).then(() => {
 
-                // 9) วาดรูปกระทง SVG ของผู้ใช้ลงตรงกลางผิวน้ำอย่างคมชัด
+        showToast('📋 คัดลอกคำอธิษฐานแล้ว นำไปวางแชร์ได้เลย');
 
-                const svgMarkup = generateKrathongSVG(item.style, "ecard_render");
+      });
 
-                const svgBlob = new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" });
+    };
 
-                const url = URL.createObjectURL(svgBlob);
+    // --- Boot App ---
 
-                await new Promise((resolve) => {
+    initSkyEffects();
 
-                    const img = new Image();
+    loadEcoStats();
 
-                    img.onload = () => {
+    INITIAL_OTHERS.forEach(item => addKrathongToRiver({ ...item }));
 
-                        // วงแสงออร่าใต้กระทง
+    // Restore user's previously floated krathong if exists
 
-                        const kGlow = c.createRadialGradient(W / 2, 1180, 30, W / 2, 1180, 270);
+    const savedMine = localStorage.getItem(STORAGE_KEY_MINE);
 
-                        kGlow.addColorStop(0, "rgba(250, 204, 21, 0.38)");
+    if (savedMine) {
 
-                        kGlow.addColorStop(1, "rgba(250, 204, 21, 0)");
+      try {
 
-                        c.fillStyle = kGlow;
+        const parsed = JSON.parse(savedMine);
 
-                        c.beginPath();
+        myKrathong = {
 
-                        c.arc(W / 2, 1180, 270, 0, Math.PI * 2);
+          id: 'mine-saved',
 
-                        c.fill();
+          name: parsed.name,
 
-                        const kSize = 460;
+          wish: parsed.wish,
 
-                        c.drawImage(img, (W - kSize) / 2, 875, kSize, kSize * 0.925);
+          style: parsed.style || 'banana-marigold',
 
-                        URL.revokeObjectURL(url);
+          x: 38,
 
-                        resolve();
+          y: 36,
 
-                    };
+          speed: 0.014,
 
-                    img.onerror = () => {
+          isMine: true
 
-                        URL.revokeObjectURL(url);
+        };
 
-                        resolve();
+        addKrathongToRiver(myKrathong);
 
-                    };
+        document.getElementById('myCardBtn').style.display = 'inline-flex';
 
-                    img.src = url;
+        document.getElementById('userNameInput').value = parsed.name;
 
-                });
+        document.getElementById('userWishInput').value = parsed.wish;
 
-                // 10) กล่องการ์ดคำอธิษฐานและชื่อผู้ลอย (Glass Panel บนการ์ด)
+        selectedStyle = parsed.style || 'banana-marigold';
 
-                const boxX = 88;
+      } catch (e) {}
 
-                const boxY = 1325;
+    }
 
-                const boxW = W - 176;
-
-                const boxH = 405;
-
-                c.fillStyle = "rgba(6, 13, 31, 0.84)";
-
-                roundRectPath(c, boxX, boxY, boxW, boxH, 36);
-
-                c.fill();
-
-                c.strokeStyle = "rgba(250, 204, 21, 0.5)";
-
-                c.lineWidth = 3;
-
-                c.stroke();
-
-                // ชื่อผู้ลอย
-
-                c.fillStyle = "#facc15";
-
-                c.font = "500 26px 'Prompt', sans-serif";
-
-                c.fillText("กระทงของ", W / 2, boxY + 52);
-
-                c.fillStyle = "#ffffff";
-
-                c.font = "700 44px 'Prompt', sans-serif";
-
-                const displayName = item.name.length > 26 ? item.name.slice(0, 26) + "..." : item.name;
-
-                c.fillText(displayName, W / 2, boxY + 108);
-
-                // เส้นคั่นสีทองบางๆ
-
-                c.strokeStyle = "rgba(250, 204, 21, 0.25)";
-
-                c.lineWidth = 2;
-
-                c.beginPath();
-
-                c.moveTo(boxX + 80, boxY + 145);
-
-                c.lineTo(boxX + boxW - 80, boxY + 145);
-
-                c.stroke();
-
-                // ข้อความคำอธิษฐานแบบตัดบรรทัดอัตโนมัติ (รองรับภาษาไทย)
-
-                c.fillStyle = "#fef9c3";
-
-                c.font = "italic 400 32px 'Prompt', sans-serif";
-
-                drawWrappedThaiText(c, `"${item.wish}"`, W / 2, boxY + 202, boxW - 110, 48, 4);
-
-                // 11) แถบสรุปสถิติรักษ์โลกด้านล่างสุดของการ์ด
-
-                const footerPillW = 820;
-
-                const footerPillH = 66;
-
-                const footerPillX = (W - footerPillW) / 2;
-
-                const footerPillY = 1765;
-
-                c.fillStyle = "rgba(20, 83, 45, 0.85)";
-
-                roundRectPath(c, footerPillX, footerPillY, footerPillW, footerPillH, 33);
-
-                c.fill();
-
-                c.strokeStyle = "rgba(134, 239, 172, 0.45)";
-
-                c.lineWidth = 2;
-
-                c.stroke();
-
-                c.fillStyle = "#bbf7d0";
-
-                c.font = "500 25px 'Prompt', sans-serif";
-
-                c.fillText("♻️ กระทงใบนี้ช่วยลดขยะ 0.8 กก. • ลดก๊าซ CO₂ 1.2 kgCO₂e", W / 2, footerPillY + footerPillH / 2 + 2);
-
-                // แปลง Canvas เป็น PNG Data URL และแสดงในพรีวิว
-
-                currentECardDataUrl = eCanvas.toDataURL("image/png");
-
-                if (previewImg) previewImg.src = currentECardDataUrl;
-
-                if (loadingBadge) loadingBadge.classList.add("hidden");
-
-            }
-
-            // ฟังก์ชันวาดสี่เหลี่ยมมุมโค้งบน Canvas
-
-            function roundRectPath(ctx, x, y, w, h, r) {
-
-                ctx.beginPath();
-
-                ctx.moveTo(x + r, y);
-
-                ctx.arcTo(x + w, y, x + w, y + h, r);
-
-                ctx.arcTo(x + w, y + h, x, y + h, r);
-
-                ctx.arcTo(x, y + h, x, y, r);
-
-                ctx.arcTo(x, y, x + w, y, r);
-
-                ctx.closePath();
-
-            }
-
-            // ฟังก์ชันวาดพลุบน E-Card Canvas
-
-            function drawCanvasFirework(ctx, cx, cy, radius, color) {
-
-                ctx.save();
-
-                const rays = 20;
-
-                for (let i = 0; i < rays; i++) {
-
-                    const angle = (Math.PI * 2 * i) / rays;
-
-                    ctx.beginPath();
-
-                    ctx.moveTo(cx + Math.cos(angle) * 12, cy + Math.sin(angle) * 12);
-
-                    ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
-
-                    ctx.strokeStyle = color;
-
-                    ctx.lineWidth = 3;
-
-                    ctx.globalAlpha = 0.65;
-
-                    ctx.stroke();
-
-                }
-
-                ctx.restore();
-
-            }
-
-            // ฟังก์ชันตัดคำและจัดกึ่งกลางข้อความภาษาไทยบน Canvas
-
-            function drawWrappedThaiText(ctx, text, centerX, startY, maxWidth, lineHeight, maxLines) {
-
-                // แยกคำด้วย Intl.Segmenter หากเบราว์เซอร์รองรับ เพื่อให้ตัดคำภาษาไทยได้สวยงามไม่ฉีกคำ
-
-                let tokens = [];
-
-                if (typeof Intl !== "undefined" && Intl.Segmenter) {
-
-                    const segmenter = new Intl.Segmenter("th", { granularity: "word" });
-
-                    tokens = Array.from(segmenter.segment(text)).map(s => s.segment);
-
-                } else {
-
-                    tokens = text.split("");
-
-                }
-
-                const lines = [];
-
-                let currentLine = "";
-
-                for (let i = 0; i < tokens.length; i++) {
-
-                    const testLine = currentLine + tokens[i];
-
-                    if (ctx.measureText(testLine).width > maxWidth && currentLine !== "") {
-
-                        lines.push(currentLine.trim());
-
-                        currentLine = tokens[i];
-
-                        if (lines.length >= maxLines) break;
-
-                    } else {
-
-                        currentLine = testLine;
-
-                    }
-
-                }
-
-                if (currentLine.trim() && lines.length < maxLines) {
-
-                    lines.push(currentLine.trim());
-
-                }
-
-                // ถ้ายาวเกินจำนวนบรรทัดสูงสุด ให้เติม ...
-
-                if (lines.length === maxLines && tokens.join("").length > lines.join("").length) {
-
-                    lines[maxLines - 1] = lines[maxLines - 1].slice(0, -3) + '..."';
-
-                }
-
-                lines.forEach((line, idx) => {
-
-                    ctx.fillText(line, centerX, startY + idx * lineHeight);
-
-                });
-
-            }
-
-            // ฟังก์ชันดาวน์โหลดไฟล์ภาพ E-Card PNG ลงเครื่อง
-
-            function downloadECardPNG() {
-
-                if (!currentECardDataUrl || !currentlyViewingKrathong) {
-
-                    showToast("กรุณารอสักครู่ การ์ดกำลังเตรียมความพร้อมครับ");
-
-                    return;
-
-                }
-
-                const link = document.createElement("a");
-
-                const safeName = currentlyViewingKrathong.name.replace(/[^a-zA-Z0-9ก-๙_-]/g, "_");
-
-                link.download = `LoyKrathong_ECard_${safeName || "Eco"}.png`;
-
-                link.href = currentECardDataUrl;
-
-                document.body.appendChild(link);
-
-                link.click();
-
-                document.body.removeChild(link);
-
-                showToast("ดาวน์โหลดการ์ดภาพ (PNG) เรียบร้อย! นำไปแชร์ลง Story ได้เลยครับ");
-
-            }
-
-            function closeViewWishModal() {
-
-                const modal = document.getElementById("viewWishModal");
-
-                modal.classList.add("hidden");
-
-                modal.classList.remove("flex");
-
-            }
-
-            // คัดลอกคำอธิษฐานลงคลิปบอร์ด (ใช้ document.execCommand ตามมาตรฐาน iFrame)
-
-            function copyWishToClipboard() {
-
-                if (!currentlyViewingKrathong) return;
-
-                const shareText = `🌕 ลอยกระทงออนไลน์ รักษ์โลก ลดโลกร้อน 🌿\nกระทงของ: ${currentlyViewingKrathong.name}\nคำอธิษฐาน: "${currentlyViewingKrathong.wish}"\n♻️ ร่วมลดขยะในแม่น้ำ 0.8 กก. และลด CO₂ 1.2 kgCO₂e`;
-
-                const tempTextarea = document.createElement("textarea");
-
-                tempTextarea.value = shareText;
-
-                tempTextarea.style.position = "fixed";
-
-                tempTextarea.style.opacity = "0";
-
-                document.body.appendChild(tempTextarea);
-
-                tempTextarea.select();
-
-                try {
-
-                    document.execCommand("copy");
-
-                    showToast("คัดลอกคำอธิษฐานเรียบร้อย! นำไปแชร์ต่อได้เลยครับ");
-
-                } catch (err) {
-
-                    showToast("ไม่สามารถคัดลอกได้ กรุณาลองใหม่อีกครั้ง");
-
-                }
-
-                document.body.removeChild(tempTextarea);
-
-            }
-
-            // 13. ระบบแจ้งเตือน Toast
-<!-- ... existing code ... -->
-
-            // 16. เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จสมบูรณ์
-
-            window.onload = function () {
-
-                initEnvironmentEffects();
-
-                // รวมกระทงเริ่มต้น + กระทงของผู้ใช้ที่เคยบันทึกไว้ใน localStorage
-
-                const savedUserKrathongs = loadUserKrathongsFromStorage();
-
-                activeKrathongs = [...DEFAULT_RIVER_KRATHONGS, ...savedUserKrathongs];
-
-                // อัปเดตสถิติ Eco Impact Counter เริ่มต้น
-
-                updateEcoImpactDashboard(savedUserKrathongs.length, false);
-
-                activeKrathongs.forEach(item => renderKrathongElement(item, false));
-
-                updateKrathongCounter();
-
-                // ผูก Event นับตัวอักษร
-<!-- ... existing code ... -->
+    animateRiver();
+</script>
+</body>
+</html>
  
